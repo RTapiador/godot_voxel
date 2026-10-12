@@ -1489,6 +1489,18 @@ uint32_t move_outer_group_operations_up(StdVector<uint32_t> &order, const Progra
 		bool is_outer_group =
 				node.type_id == VoxelGraphFunction::NODE_INPUT_X || node.type_id == VoxelGraphFunction::NODE_INPUT_Z;
 
+		// Inputs other than X and Z have no dependencies, so the check below would consider them part of the outer
+		// group, and drag every other node along with them. The inner group would always be empty, and
+		// `use_xz_caching` would never skip any operation.
+		const bool is_inner_input = node.type_id == VoxelGraphFunction::NODE_INPUT_Y ||
+				node.type_id == VoxelGraphFunction::NODE_INPUT_SDF ||
+				node.type_id == VoxelGraphFunction::NODE_CUSTOM_INPUT;
+
+		if (is_inner_input) {
+			order_inner_group.push_back(node_id);
+			continue;
+		}
+
 		if (!is_outer_group) {
 			immediate_deps.clear();
 			graph.find_immediate_dependencies(node_id, immediate_deps);
